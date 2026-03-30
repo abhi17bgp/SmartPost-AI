@@ -22,8 +22,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     const res = await api.post('/auth/login', credentials);
     const userData = res.data.data.user;
+    const token = res.data.token;
+    
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', token);
     return userData;
   };
 
@@ -46,6 +49,7 @@ export const AuthProvider = ({ children }) => {
     }
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   const updateProfile = async (data) => {

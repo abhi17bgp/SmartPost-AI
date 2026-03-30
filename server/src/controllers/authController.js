@@ -56,7 +56,7 @@ exports.register = catchAsync(async (req, res, next) => {
   await Workspace.create({ name: 'My Workspace', owner: newUser._id });
 
   // Send verification email
-  const frontendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : (process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`);
+  const frontendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : (process.env.FRONTEND_URL || 'https://smart-post-ai-gilt.vercel.app');
   const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
 
   const message = `Welcome to SmartPost AI! Please verify your email address by clicking this link:\n\n${verifyUrl}\n\n`;
@@ -191,7 +191,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   // 3) Send it to user's email
-  const frontendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : (process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`);
+  const frontendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : (process.env.FRONTEND_URL || 'https://smart-post-ai-gilt.vercel.app');
   const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
   const message = `Forgot your password? Click the link below to reset your password:\n\n${resetUrl}\n\nIf you didn't forget your password, please ignore this email!`;
