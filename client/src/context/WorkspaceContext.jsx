@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../utils/axiosInstance';
 import { useAuth } from './AuthContext';
+import { useDialog } from './DialogContext';
 import { io } from 'socket.io-client';
 
 const WorkspaceContext = createContext();
@@ -9,26 +10,27 @@ export const useWorkspace = () => useContext(WorkspaceContext);
 
 export const WorkspaceProvider = ({ children }) => {
   const { user } = useAuth();
+  const { alert: dialogAlert } = useDialog();
   const [workspaces, setWorkspaces] = useState([]);
   const [currentWorkspace, setCurrentWorkspace] = useState(null);
   const [collections, setCollections] = useState([]);
   const [savedRequests, setSavedRequests] = useState([]);
   const [history, setHistory] = useState([]);
-  
+
   // Tabs representing open requests in the main pane
   const [tabs, setTabs] = useState([{ id: 'new', title: 'Untitled Request', isNew: true }]);
   const [activeTabId, setActiveTabId] = useState('new');
-  
+
   // Shared Response State for tabs
   const [responseData, setResponseData] = useState({});
   const [responseLoading, setResponseLoading] = useState({});
   const [responseAi, setResponseAi] = useState({});
-  
+
   // Real-time typing tracking (key: requestId, value: { userName, timeout })
   const [typingUsers, setTypingUsers] = useState({});
   const [responseAiLoading, setResponseAiLoading] = useState({});
   const [latestHistoryId, setLatestHistoryId] = useState({});
-  
+
   // Socket reference
   const [socket, setSocket] = useState(null);
 
@@ -38,9 +40,8 @@ export const WorkspaceProvider = ({ children }) => {
       const res = await api.get('/workspaces');
       if (res.data.data.workspaces.length > 0) {
         setWorkspaces(res.data.data.workspaces);
-        if (!currentWorkspace || !res.data.data.workspaces.find(w => w._id === currentWorkspace._id)) {
-          setCurrentWorkspace(res.data.data.workspaces[0]);
-        }
+        const refreshedCurrent = currentWorkspace ? res.data.data.workspaces.find(w => w._id === currentWorkspace._id) : null;
+        setCurrentWorkspace(refreshedCurrent || res.data.data.workspaces[0]);
       } else {
         const createRes = await api.post('/workspaces', { name: 'My Workspace' });
         const newWorkspace = createRes.data.data.workspace;
@@ -119,9 +120,9 @@ export const WorkspaceProvider = ({ children }) => {
       fetchWorkspaces();
     };
 
-    const onMemberRemoved = (data) => {
+    const onMemberRemoved = async (data) => {
       if (data.userId === user._id && data.workspaceId === currentWorkspace._id) {
-        alert('You have been removed from this workspace.');
+        await dialogAlert('Workspace Access Revoked', 'You have been removed from this workspace.', { isDanger: true });
         fetchWorkspaces(); // Will switch workspace if current is unavailable
       }
     };
@@ -130,7 +131,7 @@ export const WorkspaceProvider = ({ children }) => {
     socket.on('collection_deleted', onUpdate);
     socket.on('request_updated', onUpdate);
     socket.on('request_deleted', onUpdate);
-    
+
     socket.on('history_added', onHistoryUpdate);
     socket.on('history_updated', onHistoryUpdate);
     socket.on('history_deleted', onHistoryUpdate);

@@ -56,13 +56,15 @@ const GlassDialog = ({ dialog, onClose }) => {
           )}
 
           <div className="flex justify-end gap-3 font-medium">
-            <button 
-              type="button" 
-              onClick={() => onClose(dialog.id, dialog.type === 'prompt' ? null : false)}
-              className="px-4 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700"
-            >
-              {dialog.cancelText || 'Cancel'}
-            </button>
+            {dialog.type !== 'alert' && (
+              <button 
+                type="button" 
+                onClick={() => onClose(dialog.id, dialog.type === 'prompt' ? null : false)}
+                className="px-4 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700"
+              >
+                {dialog.cancelText || 'Cancel'}
+              </button>
+            )}
             <button 
               type="submit"
               className={`px-6 py-2.5 rounded-xl text-white shadow-lg transition-all transform active:scale-95 border border-transparent ${
@@ -114,6 +116,20 @@ export const DialogProvider = ({ children }) => {
     });
   };
 
+  const notifyAlert = (title, message, options = {}) => {
+    return new Promise((resolve) => {
+      setDialogs(prev => [...prev, {
+        id: Date.now() + Math.random(),
+        type: 'alert',
+        title,
+        message,
+        confirmText: options.confirmText || "OK",
+        isDanger: options.isDanger || false,
+        resolve
+      }]);
+    });
+  };
+
   const closeDialog = (id, result) => {
     const dialog = dialogs.find(d => d.id === id);
     if (dialog) dialog.resolve(result);
@@ -121,7 +137,7 @@ export const DialogProvider = ({ children }) => {
   };
 
   return (
-    <DialogContext.Provider value={{ confirm, prompt }}>
+    <DialogContext.Provider value={{ confirm, prompt, alert: notifyAlert }}>
       {children}
       
       {dialogs.length > 0 && (

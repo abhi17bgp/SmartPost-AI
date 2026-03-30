@@ -14,7 +14,7 @@ const ResponsePane = ({ data, loading }) => {
   const [showPerformanceModal, setShowPerformanceModal] = useState(false);
 
   const activeReqTab = tabs.find(t => t.id === activeTabId);
-  
+
   const aiAnalysis = responseAi[activeTabId] || null;
   const aiLoading = responseAiLoading[activeTabId] || false;
 
@@ -45,7 +45,7 @@ const ResponsePane = ({ data, loading }) => {
       });
       const analysisText = res.data.data.analysis;
       setResponseAi(prev => ({ ...prev, [activeTabId]: analysisText }));
-      
+
       // Auto-save the AI Analysis permanently if this is a saved request from a collection
       if (activeTabId.startsWith('req_')) {
         const reqId = activeTabId.replace('req_', '');
@@ -103,7 +103,7 @@ const ResponsePane = ({ data, loading }) => {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-slate-900 border-l border-slate-700/50">
         <div className="w-20 h-20 mb-6 text-slate-700">
-           <MonitorDown size={80} strokeWidth={1} />
+          <MonitorDown size={80} strokeWidth={1} />
         </div>
         <h3 className="text-xl font-medium text-slate-400 mb-2 tracking-tight">Ready to Send</h3>
         <p className="text-slate-500 text-sm max-w-xs text-center">Hit the Send button to execute the request and see the response here.</p>
@@ -111,8 +111,8 @@ const ResponsePane = ({ data, loading }) => {
     );
   }
 
-  const prettyJsonSrc = typeof data.data === 'string' 
-    ? data.data 
+  const prettyJsonSrc = typeof data.data === 'string'
+    ? data.data
     : JSON.stringify(data.data, null, 2);
 
   return (
@@ -127,12 +127,12 @@ const ResponsePane = ({ data, loading }) => {
           </div>
           <div className="w-[1px] h-5 bg-slate-700" />
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider flex items-center gap-1"><Clock size={12}/> Time</span>
+            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider flex items-center gap-1"><Clock size={12} /> Time</span>
             <span className="font-mono text-sm text-emerald-400/90 font-bold">{data.timeTaken}<span className="text-emerald-600 font-medium text-xs ml-0.5">ms</span></span>
           </div>
           <div className="w-[1px] h-5 bg-slate-700 hidden sm:block" />
           <div className="hidden sm:flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider flex items-center gap-1"><Server size={12}/> Size</span>
+            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider flex items-center gap-1"><Server size={12} /> Size</span>
             <span className="font-mono text-sm text-slate-300 font-medium">{prettyJsonSrc?.length > 1024 ? (prettyJsonSrc.length / 1024).toFixed(2) + ' KB' : prettyJsonSrc?.length + ' B'}</span>
           </div>
         </div>
@@ -141,7 +141,7 @@ const ResponsePane = ({ data, loading }) => {
       <div className="flex border-b border-slate-800 shrink-0 px-2 mt-1 justify-between items-end">
         <div className="flex">
           {['Body', 'Headers', 'AI Analysis'].map(t => (
-            <button 
+            <button
               key={t}
               onClick={() => setActiveTab(t)}
               className={`px-4 py-2 text-xs font-medium transition-all relative ${activeTab === t ? (t === 'AI Analysis' ? 'text-purple-400' : 'text-emerald-400') : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'} ${t === 'AI Analysis' && activeTab !== t ? 'hover:text-purple-300' : ''}`}
@@ -155,14 +155,14 @@ const ResponsePane = ({ data, loading }) => {
           ))}
         </div>
         <div className="flex items-center">
-          <button 
+          <button
             onClick={() => setShowPerformanceModal(true)}
             className="mb-1 mr-2 text-xs font-bold px-3 py-1.5 rounded-md text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 flex items-center gap-1.5 transition-all border border-indigo-500/20"
             title="Run Performance Tests"
           >
             <Activity size={12} /> Test API
           </button>
-          <button 
+          <button
             onClick={handleAnalyze}
             disabled={aiLoading}
             className="mb-1 mr-2 text-xs font-bold px-3 py-1.5 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white flex items-center gap-1.5 shadow-lg shadow-purple-500/20 transform transition-all active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed border border-purple-400/30"
@@ -176,7 +176,7 @@ const ResponsePane = ({ data, loading }) => {
       <div className="flex-1 overflow-y-auto bg-[#0a0f1d] relative group">
         {activeTab === 'Body' && (
           <>
-            <button 
+            <button
               onClick={handleCopy}
               className="absolute top-4 right-4 p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-md opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm border border-slate-600/50 shadow-lg z-10"
               title="Copy to clipboard"
@@ -184,13 +184,13 @@ const ResponsePane = ({ data, loading }) => {
               {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
             </button>
             <pre className="p-4 m-0 font-mono text-[13px] leading-relaxed text-[#c3e88d] whitespace-pre-wrap break-all custom-scrollbar h-full">
-              {typeof data.data === 'string' 
+              {typeof data.data === 'string'
                 ? (data.data.startsWith('<') ? <span className="text-[#f07178] opacity-80">{data.data} // HTML returned</span> : <span className="text-[#eeffff]">{data.data}</span>)
                 : prettyJsonSrc}
             </pre>
           </>
         )}
-        
+
         {activeTab === 'Headers' && (
           <div className="p-4 grid grid-cols-[1fr_2fr] gap-x-4 gap-y-2 font-mono text-xs max-w-3xl">
             {Object.entries(data.headers || {}).map(([key, value]) => (

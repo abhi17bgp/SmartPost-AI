@@ -30,20 +30,20 @@ const Dashboard = () => {
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Request Pane */}
           <section className="flex-1 flex flex-col border-r border-slate-700 lg:w-1/2 overflow-hidden bg-slate-800 shrink-0">
-             <RequestPane 
-               key={`req_${activeTabId}`}
-               tab={activeTab} 
-               setResponseData={handleSetResponseData} 
-               setResponseLoading={handleSetResponseLoading}
-             />
+            <RequestPane
+              key={`req_${activeTabId}`}
+              tab={activeTab}
+              setResponseData={handleSetResponseData}
+              setResponseLoading={handleSetResponseLoading}
+            />
           </section>
 
           {/* Response Pane */}
           <section className="flex-1 flex flex-col lg:w-1/2 overflow-hidden bg-slate-900 shrink-0">
-            <ResponsePane 
+            <ResponsePane
               key={`res_${activeTabId}`}
-              data={responseData[activeTabId]} 
-              loading={responseLoading[activeTabId]} 
+              data={responseData[activeTabId]}
+              loading={responseLoading[activeTabId]}
             />
           </section>
         </div>

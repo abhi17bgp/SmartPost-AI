@@ -43,7 +43,7 @@ const WorkspaceSettingsModal = ({ onClose }) => {
         }
       );
       // Workspace context socket will pick up 'workspace_updated' and fetch Workspaces again, so UI updates automatically.
-    } catch (err) {} finally {
+    } catch (err) { } finally {
       setLoadingCode(false);
     }
   };
@@ -58,7 +58,7 @@ const WorkspaceSettingsModal = ({ onClose }) => {
           error: 'Failed to remove member'
         }
       );
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleLeaveWorkspace = async () => {
@@ -73,13 +73,13 @@ const WorkspaceSettingsModal = ({ onClose }) => {
       );
       onClose();
       fetchWorkspaces();
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleDeleteWorkspace = async () => {
     const isConfirmed = await confirm("Delete Workspace", `Are you absolutely sure you want to delete "${currentWorkspace.name}"? This will delete all collections, requests, and history inside it.`, { isDanger: true, confirmText: 'Delete' });
     if (!isConfirmed) return;
-    
+
     try {
       await toast.promise(
         api.delete(`/workspaces/${currentWorkspace._id}`),
@@ -91,7 +91,7 @@ const WorkspaceSettingsModal = ({ onClose }) => {
       );
       onClose();
       fetchWorkspaces();
-    } catch (err) {}
+    } catch (err) { }
   };
 
   return (
@@ -123,8 +123,8 @@ const WorkspaceSettingsModal = ({ onClose }) => {
                 {currentWorkspace.joinCode || '------'}
               </div>
               {currentWorkspace.joinCode && (
-                 <button 
-                  onClick={handleCopyCode} 
+                <button
+                  onClick={handleCopyCode}
                   className="bg-slate-700 hover:bg-slate-600 text-white p-2.5 rounded transition-colors border border-slate-600"
                   title="Copy Code"
                 >
@@ -132,7 +132,7 @@ const WorkspaceSettingsModal = ({ onClose }) => {
                 </button>
               )}
             </div>
-            
+
             {isAdmin && (
               <button
                 onClick={handleGenerateCode}
@@ -187,14 +187,14 @@ const WorkspaceSettingsModal = ({ onClose }) => {
         {/* Leave / Delete Workspace Action */}
         <div className="mt-6 pt-4 border-t border-slate-700">
           {!isAdmin ? (
-            <button 
+            <button
               onClick={handleLeaveWorkspace}
               className="flex w-full items-center justify-center gap-2 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 py-2 rounded border border-red-500/30 transition-colors font-medium"
             >
               <LogOut size={16} /> Leave Workspace
             </button>
           ) : (
-            <button 
+            <button
               onClick={handleDeleteWorkspace}
               className="flex w-full items-center justify-center gap-2 text-sm text-red-500 bg-red-500/5 hover:bg-red-500/10 py-2 rounded border border-red-500/20 transition-colors font-bold tracking-tight shadow-sm"
             >

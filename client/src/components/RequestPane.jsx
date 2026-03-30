@@ -15,12 +15,12 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
   const [method, setMethod] = useState(tab?.method || 'GET');
   const [url, setUrl] = useState(tab?.url || '');
   const [activeTab, setActiveTab] = useState('Params');
-  
+
   // Save Request Modal States
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [requestName, setRequestName] = useState(tab?.title && tab.title !== 'Untitled Request' ? tab.title : '');
   const [selectedCollection, setSelectedCollection] = useState(tab?.collectionId || '');
-  
+
   const [queryParams, setQueryParams] = useState(tab?.queryParams || [{ key: '', value: '', isActive: true }]);
   const [headers, setHeaders] = useState(tab?.headers || [{ key: '', value: '', isActive: true }]);
   const [bodyMode, setBodyMode] = useState(tab?.body?.mode || 'json');
@@ -40,10 +40,10 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
 
   const handleTyping = () => {
     if (!socket || !currentWorkspace || !tab?.id) return;
-    socket.emit('typing_request', { 
-      workspaceId: currentWorkspace._id, 
-      userName: user?.name, 
-      requestId: tab.id 
+    socket.emit('typing_request', {
+      workspaceId: currentWorkspace._id,
+      userName: user?.name,
+      requestId: tab.id
     });
   };
 
@@ -51,19 +51,19 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
     if (!url) return;
     setResponseLoading(true);
     setResponseData(null);
-    
+
     try {
       // Process headers & params into objects
       const activeHeaders = headers.reduce((acc, curr) => {
         if (curr.isActive && curr.key) acc[curr.key] = curr.value;
         return acc;
       }, {});
-      
+
       const activeParams = queryParams.reduce((acc, curr) => {
         if (curr.isActive && curr.key) acc[curr.key] = curr.value;
         return acc;
       }, {});
-      
+
       // Combine URL with params if valid
       let finalUrl = url;
       if (Object.keys(activeParams).length > 0) {
@@ -73,7 +73,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
           finalUrl = urlObj.toString();
         } catch (e) {
           // Ignore invalid URL parse issues for now
-          finalUrl = url; 
+          finalUrl = url;
         }
       }
 
@@ -93,13 +93,13 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
         headers: activeHeaders,
         data: parsedBody
       });
-      
+
       setResponseData(res.data.data);
-      
+
       // Auto-save the response permanently if this is a saved request from a collection
       if (tab?.id?.startsWith('req_')) {
         const reqId = tab.id.replace('req_', '');
-        api.patch(`/requests/${reqId}`, { 
+        api.patch(`/requests/${reqId}`, {
           lastResponse: {
             status: res.data.data.status,
             timeTaken: res.data.data.timeTaken,
@@ -108,7 +108,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
           }
         }).catch(err => console.error("Auto-save response failed:", err));
       }
-      
+
       // Save history
       api.post('/history', {
         workspaceId: currentWorkspace?._id,
@@ -126,7 +126,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
           setLatestHistoryId(prev => ({ ...prev, [tab.id]: historyRes.data.data.history._id }));
         }
         fetchHistory();
-      }).catch(() => {});
+      }).catch(() => { });
 
 
     } catch (err) {
@@ -172,7 +172,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
       toast.error('Please provide a name and select a collection');
       return;
     }
-    
+
     try {
       const currentResponse = responseData[tab.id];
       const currentAi = responseAi[tab.id];
@@ -196,7 +196,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
           headers: currentResponse.headers
         };
       }
-      
+
       if (currentAi) {
         payload.aiAnalysis = currentAi;
       }
@@ -206,16 +206,16 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
           if (tab?.id?.startsWith('req_')) {
             const reqId = tab.id.replace('req_', '');
             const res = await api.patch(`/requests/${reqId}`, payload);
-            
+
             // Sync tab state so name and configurations stick visually
-            setTabs(prev => prev.map(t => t.id === tab.id ? { 
-              ...t, 
-              title: payload.name, 
-              method: payload.method, 
-              url: payload.url, 
+            setTabs(prev => prev.map(t => t.id === tab.id ? {
+              ...t,
+              title: payload.name,
+              method: payload.method,
+              url: payload.url,
               collectionId: selectedCollection,
-              headers: payload.headers, 
-              queryParams: payload.queryParams, 
+              headers: payload.headers,
+              queryParams: payload.queryParams,
               body: { mode: bodyMode, content: bodyContent },
               updatedBy: res.data.data.request.updatedBy
             } : t));
@@ -223,17 +223,17 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
           } else {
             const res = await api.post('/requests', payload);
             const newReqId = res.data.data.request._id;
-            
+
             // Upgrade temporary tab to a persistent saved request tab
-            setTabs(prev => prev.map(t => t.id === tab.id ? { 
-              ...t, 
+            setTabs(prev => prev.map(t => t.id === tab.id ? {
+              ...t,
               id: `req_${newReqId}`,
-              title: payload.name, 
-              method: payload.method, 
-              url: payload.url, 
+              title: payload.name,
+              method: payload.method,
+              url: payload.url,
               collectionId: selectedCollection,
-              headers: payload.headers, 
-              queryParams: payload.queryParams, 
+              headers: payload.headers,
+              queryParams: payload.queryParams,
               body: { mode: bodyMode, content: bodyContent },
               updatedBy: res.data.data.request.updatedBy
             } : t));
@@ -257,7 +257,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
   const handleKeyValueChange = (index, field, value, state, setState) => {
     const newState = [...state];
     newState[index][field] = value;
-    
+
     // Auto-add new empty row if editing the last one
     if (index === state.length - 1 && value !== '') {
       newState.push({ key: '', value: '', isActive: true });
@@ -277,22 +277,22 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
       {state.map((item, i) => (
         <div key={i} className="grid grid-cols-[30px_1fr_1fr_30px] gap-2 items-center group">
           <div className="flex items-center justify-center">
-            <input 
-              type="checkbox" 
-              checked={item.isActive} 
+            <input
+              type="checkbox"
+              checked={item.isActive}
               onChange={(e) => handleKeyValueChange(i, 'isActive', e.target.checked, state, setState)}
               className="w-3.5 h-3.5 rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900"
             />
           </div>
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={item.key}
             onChange={(e) => handleKeyValueChange(i, 'key', e.target.value, state, setState)}
             placeholder={name + " Key"}
             className="bg-transparent border border-slate-700/50 rounded px-3 py-1.5 text-sm font-mono focus:border-emerald-500/50 focus:outline-none transition-colors w-full placeholder:text-slate-600"
           />
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={item.value}
             onChange={(e) => handleKeyValueChange(i, 'value', e.target.value, state, setState)}
             placeholder="Value"
@@ -300,7 +300,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
           />
           <div className="flex items-center justify-center">
             {i !== state.length - 1 && (
-              <button 
+              <button
                 onClick={() => setState(state.filter((_, idx) => idx !== i))}
                 className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-all font-bold"
               >×</button>
@@ -314,7 +314,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
   return (
     <div className="flex flex-col h-full bg-slate-800 relative">
       <div className="p-4 border-b border-slate-700 shrink-0 bg-slate-800/80 backdrop-blur z-10 sticky top-0">
-        
+
         {/* Typing Overlay & Updated By text */}
         <div className="flex justify-between items-end mb-2 h-4">
           <div className="text-[10px] text-slate-500 font-medium">
@@ -334,32 +334,32 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
 
         <div className="flex gap-2 bg-slate-900/50 p-1.5 rounded-lg border border-slate-700 ring-1 ring-inset ring-black/20">
           <div className="relative group shrink-0">
-            <select 
-              value={method} 
+            <select
+              value={method}
               onChange={(e) => setMethod(e.target.value)}
               className={`appearance-none bg-transparent font-bold cursor-pointer focus:outline-none px-4 py-2 pr-8 rounded transition-colors uppercase text-sm
-                ${method === 'GET' ? 'text-emerald-500 group-hover:bg-emerald-500/10' : 
-                  method === 'POST' ? 'text-blue-500 group-hover:bg-blue-500/10' : 
-                  method === 'DELETE' ? 'text-red-500 group-hover:bg-red-500/10' : 
-                  'text-orange-500 group-hover:bg-orange-500/10'}`}
+                ${method === 'GET' ? 'text-emerald-500 group-hover:bg-emerald-500/10' :
+                  method === 'POST' ? 'text-blue-500 group-hover:bg-blue-500/10' :
+                    method === 'DELETE' ? 'text-red-500 group-hover:bg-red-500/10' :
+                      'text-orange-500 group-hover:bg-orange-500/10'}`}
             >
               {METHODS.map(m => <option key={m} value={m} className="bg-slate-800 text-white">{m}</option>)}
             </select>
             <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
           </div>
-          
+
           <div className="w-[1px] bg-slate-700 my-1 shrink-0" />
-          
-          <input 
-            type="text" 
+
+          <input
+            type="text"
             value={url}
             onChange={(e) => { setUrl(e.target.value); handleTyping(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Enter request URL"
             className="flex-1 bg-transparent px-3 py-2 outline-none text-slate-200 placeholder:text-slate-500 font-mono text-sm w-full min-w-[100px]"
           />
-          
-          <button 
+
+          <button
             onClick={handleSend}
             className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 border-0! m-0! rounded-md font-medium text-sm flex items-center gap-2 transition-all shrink-0 ring-1 ring-inset ring-white/10 shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
           >
@@ -373,7 +373,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
 
       <div className="flex border-b border-slate-700 shrink-0 px-2 mt-1">
         {['Params', 'Headers', 'Auth', 'Body'].map(t => (
-          <button 
+          <button
             key={t}
             onClick={() => setActiveTab(t)}
             className={`px-4 py-2 lg:py-2 text-xs lg:text-sm font-medium transition-all relative ${activeTab === t ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30'}`}
@@ -396,21 +396,21 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
                   <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${bodyMode === m ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-500 group-hover:border-slate-400'}`}>
                     {bodyMode === m && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
                   </div>
-                  <input 
-                    type="radio" 
-                    name="bodyMode" 
-                    value={m} 
-                    checked={bodyMode === m} 
-                    onChange={() => setBodyMode(m)} 
-                    className="hidden" 
+                  <input
+                    type="radio"
+                    name="bodyMode"
+                    value={m}
+                    checked={bodyMode === m}
+                    onChange={() => setBodyMode(m)}
+                    className="hidden"
                   />
                   <span>{m}</span>
                 </label>
               ))}
             </div>
-            
+
             {bodyMode === 'json' ? (
-              <textarea 
+              <textarea
                 value={bodyContent}
                 onChange={(e) => { setBodyContent(e.target.value); handleTyping(); }}
                 className="flex-1 w-full bg-[#1e1e1e] border border-slate-700/50 rounded-lg p-4 font-mono text-sm text-[#d4d4d4] focus:outline-none focus:border-emerald-500/50 custom-scrollbar shadow-inner resize-none min-h-[300px]"
@@ -431,17 +431,17 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
           <div className="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-white tracking-tight">Save Request</h3>
-              <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-white transition-colors p-1"><X size={20}/></button>
+              <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-white transition-colors p-1"><X size={20} /></button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1.5 font-medium">Request Name</label>
-                <input 
-                  type="text" 
-                  value={requestName} 
+                <input
+                  type="text"
+                  value={requestName}
                   onChange={e => setRequestName(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700/50 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-emerald-500 transition-colors" 
+                  className="w-full bg-slate-900 border border-slate-700/50 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-emerald-500 transition-colors"
                   placeholder="e.g. Get User Profile"
                 />
               </div>
@@ -460,8 +460,8 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
                     </button>
                   </div>
                 ) : (
-                  <select 
-                    value={selectedCollection} 
+                  <select
+                    value={selectedCollection}
                     onChange={e => setSelectedCollection(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-700/50 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-emerald-500 transition-colors cursor-pointer appearance-none"
                   >
@@ -470,8 +470,8 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
                   </select>
                 )}
               </div>
-              
-              <button 
+
+              <button
                 onClick={handleSaveRequest}
                 disabled={collections.length === 0}
                 className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 rounded-lg mt-4 transition-colors"

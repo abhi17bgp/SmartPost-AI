@@ -48,7 +48,7 @@ const Sidebar = () => {
           error: (err) => err.response?.data?.message || err.message || 'Failed to update profile'
         }
       );
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleDeleteAccount = async () => {
@@ -85,7 +85,7 @@ const Sidebar = () => {
       fetchWorkspaces();
       setCurrentWorkspace(res.data.data.workspace);
       setShowWorkspaceMenu(false);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleJoinWorkspace = async () => {
@@ -103,7 +103,7 @@ const Sidebar = () => {
       fetchWorkspaces();
       setCurrentWorkspace(res.data.data.workspace);
       setShowWorkspaceMenu(false);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleCreateCollection = async () => {
@@ -196,8 +196,8 @@ const Sidebar = () => {
       };
       setTabs([...tabs, newTab]);
       if (req.lastResponse) {
-        setResponseData(prev => ({ 
-          ...prev, 
+        setResponseData(prev => ({
+          ...prev,
           [reqTabId]: {
             status: req.lastResponse.status,
             timeTaken: req.lastResponse.timeTaken,
@@ -334,7 +334,7 @@ const Sidebar = () => {
       </div>
 
       <div className="p-3 border-b border-slate-700 relative">
-        <div 
+        <div
           onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
           className="bg-slate-900 rounded-lg p-2 px-3 border border-slate-700/50 flex items-center justify-between cursor-pointer hover:border-slate-600 transition-colors"
         >
@@ -460,8 +460,8 @@ const Sidebar = () => {
                     <span className={h.status >= 200 && h.status < 300 ? 'text-emerald-500/70' : 'text-red-500/70'}>{h.status} {h.status >= 200 && h.status < 300 ? 'OK' : 'ERR'}</span>
                     <span>{h.timeTaken}ms</span>
                   </div>
-                  <button 
-                    onClick={(e) => handleDeleteHistory(e, h._id)} 
+                  <button
+                    onClick={(e) => handleDeleteHistory(e, h._id)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 text-slate-500 rounded transition-all"
                     title="Delete history item"
                   >
@@ -504,14 +504,14 @@ const Sidebar = () => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="space-y-6">
               <form onSubmit={handleUpdateProfile} className="bg-slate-900 border border-slate-700/50 rounded-lg p-4 shadow-inner">
                 <h4 className="text-xs font-semibold text-slate-400 mb-4 uppercase tracking-wider">Profile Information</h4>
                 <div className="space-y-3">
                   <div>
                     <label className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5 tracking-wider">Name *</label>
-                    <input 
+                    <input
                       required
                       type="text"
                       className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500"
@@ -521,7 +521,7 @@ const Sidebar = () => {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5 tracking-wider">Email Address (Read-only)</label>
-                    <input 
+                    <input
                       disabled
                       type="email"
                       className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-400 text-sm font-mono rounded px-2 py-1.5 focus:outline-none cursor-not-allowed select-none"
@@ -531,7 +531,7 @@ const Sidebar = () => {
                   </div>
                   <div className="pt-2 border-t border-slate-800/50">
                     <label className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5 tracking-wider">Bio (Optional)</label>
-                    <textarea 
+                    <textarea
                       className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500 resize-none h-16"
                       value={profileForm.bio}
                       placeholder="A short bio about yourself..."
@@ -541,7 +541,7 @@ const Sidebar = () => {
                   <div className="flex gap-3">
                     <div className="flex-1">
                       <label className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5 tracking-wider">Company (Optional)</label>
-                      <input 
+                      <input
                         type="text"
                         className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500"
                         value={profileForm.company}
@@ -551,7 +551,7 @@ const Sidebar = () => {
                     </div>
                     <div className="flex-1">
                       <label className="text-[10px] uppercase font-bold text-slate-500 block mb-0.5 tracking-wider">Title (Optional)</label>
-                      <input 
+                      <input
                         type="text"
                         className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500"
                         value={profileForm.title}
@@ -567,11 +567,11 @@ const Sidebar = () => {
                   </button>
                 </div>
               </form>
-              
+
               <div className="bg-red-500/5 border border-red-500/30 rounded-lg p-4">
                 <h4 className="text-xs font-bold text-red-500 mb-2 uppercase tracking-wider">Danger Zone</h4>
                 <p className="text-xs text-red-400/80 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-                <button 
+                <button
                   onClick={handleDeleteAccount}
                   className="w-full bg-red-500/10 hover:bg-red-500/50 text-red-500 font-bold tracking-tight py-2 rounded-lg transition-colors text-sm shadow-md ring-1 ring-inset ring-red-500/20"
                 >
