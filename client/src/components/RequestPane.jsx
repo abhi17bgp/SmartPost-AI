@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { Send, Save, ChevronDown, X } from 'lucide-react';
 import api from '../utils/axiosInstance';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useAuth } from '../context/AuthContext';
 import { useDialog } from '../context/DialogContext';
 import toast from 'react-hot-toast';
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
 
 const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
-  const { fetchHistory, collections, fetchCollections, currentWorkspace, setTabs, setActiveTabId, responseData, responseAi, setLatestHistoryId } = useWorkspace();
+  const { fetchHistory, collections, fetchCollections, currentWorkspace, setTabs, setActiveTabId, responseData, responseAi, setLatestHistoryId, typingUsers, socket } = useWorkspace();
+  const { user } = useAuth();
   const { prompt } = useDialog();
   const [method, setMethod] = useState(tab?.method || 'GET');
   const [url, setUrl] = useState(tab?.url || '');
@@ -35,6 +37,15 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
     setRequestName(tab?.title && tab.title !== 'Untitled Request' ? tab.title : '');
     setSelectedCollection(tab?.collectionId || '');
   }, [tab]);
+
+  const handleTyping = () => {
+    if (!socket || !currentWorkspace || !tab?.id) return;
+    socket.emit('typing_request', { 
+      workspaceId: currentWorkspace._id, 
+      userName: user?.name, 
+      requestId: tab.id 
+    });
+  };
 
   const handleSend = async () => {
     if (!url) return;
@@ -100,6 +111,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
       
       // Save history
       api.post('/history', {
+        workspaceId: currentWorkspace?._id,
         method,
         url: finalUrl,
         status: res.data.data.status,
@@ -172,7 +184,8 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
         headers,
         queryParams,
         body: { type: bodyMode === 'json' ? 'json' : 'none', content: bodyContent },
-        collectionId: selectedCollection
+        collectionId: selectedCollection,
+        workspaceId: currentWorkspace?._id
       };
 
       if (currentResponse) {
@@ -192,7 +205,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
         (async () => {
           if (tab?.id?.startsWith('req_')) {
             const reqId = tab.id.replace('req_', '');
-            await api.patch(`/requests/${reqId}`, payload);
+            const res = await api.patch(`/requests/${reqId}`, payload);
             
             // Sync tab state so name and configurations stick visually
             setTabs(prev => prev.map(t => t.id === tab.id ? { 
@@ -203,7 +216,8 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
               collectionId: selectedCollection,
               headers: payload.headers, 
               queryParams: payload.queryParams, 
-              body: { mode: bodyMode, content: bodyContent } 
+              body: { mode: bodyMode, content: bodyContent },
+              updatedBy: res.data.data.request.updatedBy
             } : t));
 
           } else {
@@ -220,7 +234,8 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
               collectionId: selectedCollection,
               headers: payload.headers, 
               queryParams: payload.queryParams, 
-              body: { mode: bodyMode, content: bodyContent } 
+              body: { mode: bodyMode, content: bodyContent },
+              updatedBy: res.data.data.request.updatedBy
             } : t));
             setActiveTabId(`req_${newReqId}`);
           }
@@ -248,6 +263,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
       newState.push({ key: '', value: '', isActive: true });
     }
     setState(newState);
+    handleTyping();
   };
 
   const KeyValueEditor = ({ name, state, setState }) => (
@@ -296,8 +312,26 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
   );
 
   return (
-    <div className="flex flex-col h-full bg-slate-800">
+    <div className="flex flex-col h-full bg-slate-800 relative">
       <div className="p-4 border-b border-slate-700 shrink-0 bg-slate-800/80 backdrop-blur z-10 sticky top-0">
+        
+        {/* Typing Overlay & Updated By text */}
+        <div className="flex justify-between items-end mb-2 h-4">
+          <div className="text-[10px] text-slate-500 font-medium">
+            {tab?.updatedBy && `Last updated by ${tab.updatedBy.name}`}
+          </div>
+          {typingUsers[tab?.id] && typingUsers[tab?.id].userName !== user?.name && (
+            <div className="text-xs font-medium text-emerald-400 animate-pulse flex items-center gap-1.5 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+              <div className="flex gap-0.5">
+                <span className="w-1 h-1 bg-emerald-400 rounded-full animate-bounce"></span>
+                <span className="w-1 h-1 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                <span className="w-1 h-1 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+              </div>
+              {typingUsers[tab.id].userName} is editing...
+            </div>
+          )}
+        </div>
+
         <div className="flex gap-2 bg-slate-900/50 p-1.5 rounded-lg border border-slate-700 ring-1 ring-inset ring-black/20">
           <div className="relative group shrink-0">
             <select 
@@ -319,7 +353,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
           <input 
             type="text" 
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => { setUrl(e.target.value); handleTyping(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Enter request URL"
             className="flex-1 bg-transparent px-3 py-2 outline-none text-slate-200 placeholder:text-slate-500 font-mono text-sm w-full min-w-[100px]"
@@ -378,7 +412,7 @@ const RequestPane = ({ setResponseData, setResponseLoading, tab }) => {
             {bodyMode === 'json' ? (
               <textarea 
                 value={bodyContent}
-                onChange={(e) => setBodyContent(e.target.value)}
+                onChange={(e) => { setBodyContent(e.target.value); handleTyping(); }}
                 className="flex-1 w-full bg-[#1e1e1e] border border-slate-700/50 rounded-lg p-4 font-mono text-sm text-[#d4d4d4] focus:outline-none focus:border-emerald-500/50 custom-scrollbar shadow-inner resize-none min-h-[300px]"
                 spellCheck="false"
               />

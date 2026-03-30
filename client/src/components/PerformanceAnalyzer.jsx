@@ -3,8 +3,10 @@ import { Activity, Play, Settings, Server, Clock, ServerCog, Lightbulb } from 'l
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
+import { useWorkspace } from '../context/WorkspaceContext';
 
 const PerformanceAnalyzer = ({ activeReqTab, onClose }) => {
+  const { currentWorkspace } = useWorkspace();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState([]);
   const [runs, setRuns] = useState(5);
@@ -112,6 +114,45 @@ const PerformanceAnalyzer = ({ activeReqTab, onClose }) => {
 
     setIsRunning(false);
     setHasRun(true);
+
+    // Calculate metrics to save
+    const currentResults = testType === 'sequential' ? testResults : results;
+    const validResults = currentResults.filter(r => !r.error && !r.pending && r.time !== null);
+    
+    let avg = 0, currentMin = 0, currentMax = 0, errCount = currentResults.filter(r => r.error).length;
+    if (validResults.length > 0) {
+      const total = validResults.reduce((acc, r) => acc + r.time, 0);
+      avg = Math.round(total / validResults.length);
+      currentMax = Math.max(...validResults.map(r => r.time));
+      currentMin = Math.min(...validResults.map(r => r.time));
+    }
+
+    const stable = errCount === 0 && (validResults.length < 2 || (currentMax - currentMin) < Math.max(50, avg * 0.15));
+
+    // Save performance history
+    if (currentWorkspace) {
+      try {
+        await api.post('/history', {
+          workspaceId: currentWorkspace._id,
+          method: activeReqTab.method,
+          url: finalUrl,
+          status: errCount === 0 ? 200 : 500,
+          timeTaken: avg,
+          isPerformanceRun: true,
+          performanceMetrics: {
+            runs,
+            testType,
+            average: avg,
+            min: currentMin,
+            max: currentMax,
+            errorCount: errCount,
+            isStable: stable
+          }
+        });
+      } catch (err) {
+        console.error('Failed to save performance run history', err);
+      }
+    }
   };
 
   const getAverage = () => {

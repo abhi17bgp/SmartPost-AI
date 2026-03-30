@@ -43,6 +43,16 @@ const requestSchema = new mongoose.Schema({
     ref: 'Collection',
     required: [true, 'Request must belong to a collection']
   },
+  workspaceId: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Workspace',
+    required: false
+  },
+  updatedBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: false
+  },
   lastResponse: {
     status: Number,
     timeTaken: Number,

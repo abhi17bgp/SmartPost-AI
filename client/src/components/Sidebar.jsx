@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Settings, Plus, PlaySquare, ChevronRight, ChevronDown, Trash2, X, Folder, History } from 'lucide-react';
+import { LogOut, Settings, Plus, PlaySquare, ChevronRight, ChevronDown, Trash2, X, Folder, History, Users, KeyRound, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/axiosInstance';
 import { useDialog } from '../context/DialogContext';
+import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 
 const Sidebar = () => {
-  const { currentWorkspace, collections, savedRequests, fetchCollections, history, fetchHistory, tabs, setTabs, setActiveTabId, setResponseData, setResponseAi, setLatestHistoryId } = useWorkspace();
+  const { currentWorkspace, setCurrentWorkspace, workspaces, fetchWorkspaces, collections, savedRequests, fetchCollections, history, fetchHistory, tabs, setTabs, setActiveTabId, setResponseData, setResponseAi, setLatestHistoryId } = useWorkspace();
   const { user, logout, updateProfile } = useAuth();
   const { confirm, prompt } = useDialog();
   const [activeTab, setActiveTab] = useState('collections'); // 'collections' or 'history'
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
+  const [showWorkspaceSettings, setShowWorkspaceSettings] = useState(false);
   const isDeletingRef = React.useRef(false);
 
   const [profileForm, setProfileForm] = useState({
@@ -65,6 +68,42 @@ const Sidebar = () => {
         // Handled by toast
       }
     }
+  };
+
+  const handleCreateWorkspace = async () => {
+    const name = await prompt("New Workspace", "Enter a name for your new workspace:", { placeholder: "e.g. My Team Project" });
+    if (!name) return;
+    try {
+      const res = await toast.promise(
+        api.post('/workspaces', { name }),
+        {
+          loading: 'Creating workspace...',
+          success: 'Workspace created!',
+          error: 'Failed to create workspace'
+        }
+      );
+      fetchWorkspaces();
+      setCurrentWorkspace(res.data.data.workspace);
+      setShowWorkspaceMenu(false);
+    } catch (err) {}
+  };
+
+  const handleJoinWorkspace = async () => {
+    const joinCode = await prompt("Join Workspace", "Enter the 6-character workspace mix code:", { placeholder: "e.g. A1B2C3" });
+    if (!joinCode) return;
+    try {
+      const res = await toast.promise(
+        api.post('/workspaces/join', { joinCode: joinCode.toUpperCase() }),
+        {
+          loading: 'Joining workspace...',
+          success: 'Successfully joined!',
+          error: (err) => err.response?.data?.message || 'Failed to join workspace'
+        }
+      );
+      fetchWorkspaces();
+      setCurrentWorkspace(res.data.data.workspace);
+      setShowWorkspaceMenu(false);
+    } catch (err) {}
   };
 
   const handleCreateCollection = async () => {
@@ -147,6 +186,7 @@ const Sidebar = () => {
         method: req.method,
         url: req.url,
         collectionId: req.collectionId,
+        updatedBy: req.updatedBy,
         headers: req.headers?.length ? req.headers : [{ key: '', value: '', isActive: true }],
         queryParams: req.queryParams?.length ? req.queryParams : [{ key: '', value: '', isActive: true }],
         body: {
@@ -293,14 +333,51 @@ const Sidebar = () => {
         </span>
       </div>
 
-      <div className="p-3 border-b border-slate-700">
-        <div className="bg-slate-900 rounded-lg p-2 px-3 border border-slate-700/50 flex items-center justify-between cursor-pointer hover:border-slate-600 transition-colors">
+      <div className="p-3 border-b border-slate-700 relative">
+        <div 
+          onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
+          className="bg-slate-900 rounded-lg p-2 px-3 border border-slate-700/50 flex items-center justify-between cursor-pointer hover:border-slate-600 transition-colors"
+        >
           <div className="flex flex-col overflow-hidden">
             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Workspace</span>
             <span className="text-sm font-medium text-slate-200 truncate">{currentWorkspace?.name || 'Loading...'}</span>
           </div>
-          <ChevronDown size={14} className="text-slate-400" />
+          <ChevronDown size={14} className={`text-slate-400 transition-transform ${showWorkspaceMenu ? 'rotate-180' : ''}`} />
         </div>
+
+        {/* Workspace Dropdown */}
+        {showWorkspaceMenu && (
+          <div className="absolute top-full left-3 right-3 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden transform origin-top animate-dropdown border-b border-slate-900">
+            <div className="max-h-48 overflow-y-auto custom-scrollbar">
+              {workspaces.map((w) => (
+                <button
+                  key={w._id}
+                  onClick={() => {
+                    setCurrentWorkspace(w);
+                    setShowWorkspaceMenu(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-slate-700/50 transition-colors ${currentWorkspace?._id === w._id ? 'text-emerald-400 font-semibold bg-emerald-500/5' : 'text-slate-300'}`}
+                >
+                  <div className="w-4 flex-shrink-0 flex justify-center">
+                    {currentWorkspace?._id === w._id && <Check size={14} />}
+                  </div>
+                  <span className="truncate">{w.name}</span>
+                </button>
+              ))}
+            </div>
+            <div className="border-t border-slate-700 bg-slate-800/80 p-1 flex flex-col">
+              <button onClick={() => { setShowWorkspaceSettings(true); setShowWorkspaceMenu(false); }} className="w-full text-left px-3 py-2 text-xs text-slate-300 flex items-center gap-2 hover:bg-slate-700/50 transition-colors rounded">
+                <Settings size={14} className="text-slate-400" /> Manage Current Workspace
+              </button>
+              <button onClick={handleCreateWorkspace} className="w-full text-left px-3 py-2 text-xs text-slate-300 flex items-center gap-2 hover:bg-slate-700/50 transition-colors rounded">
+                <Plus size={14} className="text-slate-400" /> Create New Workspace
+              </button>
+              <button onClick={handleJoinWorkspace} className="w-full text-left px-3 py-2 text-xs text-slate-300 flex items-center gap-2 hover:bg-slate-700/50 transition-colors rounded">
+                <KeyRound size={14} className="text-slate-400" /> Join Workspace
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex border-b border-slate-700 text-sm">
@@ -504,6 +581,11 @@ const Sidebar = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Workspace Settings Modal */}
+      {showWorkspaceSettings && (
+        <WorkspaceSettingsModal onClose={() => setShowWorkspaceSettings(false)} />
       )}
     </aside>
   );

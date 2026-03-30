@@ -6,6 +6,11 @@ const historySchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  workspaceId: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Workspace',
+    required: false
+  },
   method: {
     type: String,
     required: true
@@ -23,6 +28,14 @@ const historySchema = new mongoose.Schema({
   responseData: { type: mongoose.Schema.Types.Mixed },
   responseHeaders: { type: mongoose.Schema.Types.Mixed },
   aiAnalysis: { type: String, default: null },
+  isPerformanceRun: {
+    type: Boolean,
+    default: false
+  },
+  performanceMetrics: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now,
