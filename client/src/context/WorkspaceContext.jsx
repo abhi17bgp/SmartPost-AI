@@ -98,7 +98,7 @@ export const WorkspaceProvider = ({ children }) => {
       return;
     }
 
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io('https://smartpost-ai-un1e.onrender.com', {
       withCredentials: true
     });
     setSocket(newSocket);
