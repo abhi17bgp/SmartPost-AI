@@ -7,7 +7,7 @@ import api from '../utils/axiosInstance';
 import { useDialog } from '../context/DialogContext';
 
 const Sidebar = () => {
-  const { currentWorkspace, collections, savedRequests, fetchCollections, history, tabs, setTabs, setActiveTabId, setResponseData, setResponseAi, setLatestHistoryId } = useWorkspace();
+  const { currentWorkspace, collections, savedRequests, fetchCollections, history, fetchHistory, tabs, setTabs, setActiveTabId, setResponseData, setResponseAi, setLatestHistoryId } = useWorkspace();
   const { user, logout, updateProfile } = useAuth();
   const { confirm, prompt } = useDialog();
   const [activeTab, setActiveTab] = useState('collections'); // 'collections' or 'history'

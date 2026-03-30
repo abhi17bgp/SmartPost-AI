@@ -7,7 +7,7 @@ import api from '../utils/axiosInstance';
 import { useWorkspace } from '../context/WorkspaceContext';
 
 const ResponsePane = ({ data, loading }) => {
-  const { tabs, activeTabId, responseAi, setResponseAi, responseAiLoading, setResponseAiLoading, latestHistoryId } = useWorkspace();
+  const { tabs, activeTabId, responseAi, setResponseAi, responseAiLoading, setResponseAiLoading, latestHistoryId, fetchHistory, fetchCollections } = useWorkspace();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('Body');
 
@@ -47,13 +47,17 @@ const ResponsePane = ({ data, loading }) => {
       // Auto-save the AI Analysis permanently if this is a saved request from a collection
       if (activeTabId.startsWith('req_')) {
         const reqId = activeTabId.replace('req_', '');
-        api.patch(`/requests/${reqId}`, { aiAnalysis: analysisText }).catch(err => console.error("Auto-save AI failed:", err));
+        api.patch(`/requests/${reqId}`, { aiAnalysis: analysisText })
+          .then(() => fetchCollections?.())
+          .catch(err => console.error("Auto-save AI failed:", err));
       }
 
       // Auto-save the AI Analysis to the global history log
       const histId = latestHistoryId?.[activeTabId];
       if (histId) {
-        api.patch(`/history/${histId}`, { aiAnalysis: analysisText }).catch(err => console.error("History auto-save AI failed:", err));
+        api.patch(`/history/${histId}`, { aiAnalysis: analysisText })
+          .then(() => fetchHistory?.())
+          .catch(err => console.error("History auto-save AI failed:", err));
       }
 
       toast.success("Analysis complete!");
