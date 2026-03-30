@@ -39,9 +39,15 @@ export const WorkspaceProvider = ({ children }) => {
     try {
       const res = await api.get('/workspaces');
       if (res.data.data.workspaces.length > 0) {
-        setWorkspaces(res.data.data.workspaces);
-        const refreshedCurrent = currentWorkspace ? res.data.data.workspaces.find(w => w._id === currentWorkspace._id) : null;
-        setCurrentWorkspace(refreshedCurrent || res.data.data.workspaces[0]);
+        const newWorkspaces = res.data.data.workspaces;
+        setWorkspaces(newWorkspaces);
+        setCurrentWorkspace(prev => {
+          if (!prev) return newWorkspaces[0];
+          const refreshed = newWorkspaces.find(w => w._id === prev._id);
+          // Only update if we found it, to avoid unnecessary reference changes if nothing changed.
+          // In practice, it's safer to just return refreshed, but to be safe we'll return refreshed or default.
+          return refreshed || newWorkspaces[0];
+        });
       } else {
         const createRes = await api.post('/workspaces', { name: 'My Workspace' });
         const newWorkspace = createRes.data.data.workspace;
@@ -51,7 +57,7 @@ export const WorkspaceProvider = ({ children }) => {
     } catch (err) {
       console.error('Failed to fetch workspaces', err);
     }
-  }, [user, currentWorkspace]);
+  }, [user]);
 
   const fetchCollections = useCallback(async () => {
     if (!currentWorkspace) return;
