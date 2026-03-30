@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, Check, FileJson, Clock, Server, MonitorDown, Sparkles, Loader2 } from 'lucide-react';
+import { Copy, Check, FileJson, Clock, Server, MonitorDown, Sparkles, Loader2, Activity } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import toast from 'react-hot-toast';
 import api from '../utils/axiosInstance';
 import { useWorkspace } from '../context/WorkspaceContext';
+import PerformanceAnalyzer from './PerformanceAnalyzer';
 
 const ResponsePane = ({ data, loading }) => {
   const { tabs, activeTabId, responseAi, setResponseAi, responseAiLoading, setResponseAiLoading, latestHistoryId, fetchHistory, fetchCollections } = useWorkspace();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('Body');
+  const [showPerformanceModal, setShowPerformanceModal] = useState(false);
 
   const activeReqTab = tabs.find(t => t.id === activeTabId);
   
@@ -152,14 +154,23 @@ const ResponsePane = ({ data, loading }) => {
             </button>
           ))}
         </div>
-        <button 
-          onClick={handleAnalyze}
-          disabled={aiLoading}
-          className="mb-1 mr-2 text-xs font-bold px-3 py-1.5 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white flex items-center gap-1.5 shadow-lg shadow-purple-500/20 transform transition-all active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed border border-purple-400/30"
-          title="Analyze response using SmartPost AI"
-        >
-          {aiLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} Analyze ✨
-        </button>
+        <div className="flex items-center">
+          <button 
+            onClick={() => setShowPerformanceModal(true)}
+            className="mb-1 mr-2 text-xs font-bold px-3 py-1.5 rounded-md text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 flex items-center gap-1.5 transition-all border border-indigo-500/20"
+            title="Run Performance Tests"
+          >
+            <Activity size={12} /> Test API
+          </button>
+          <button 
+            onClick={handleAnalyze}
+            disabled={aiLoading}
+            className="mb-1 mr-2 text-xs font-bold px-3 py-1.5 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white flex items-center gap-1.5 shadow-lg shadow-purple-500/20 transform transition-all active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed border border-purple-400/30"
+            title="Analyze response using SmartPost AI"
+          >
+            {aiLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} Analyze ✨
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto bg-[#0a0f1d] relative group">
@@ -213,6 +224,15 @@ const ResponsePane = ({ data, loading }) => {
                 <p className="text-slate-500 text-sm">Click the <strong className="text-purple-400">Analyze ✨</strong> button above to uncover insights.</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Performance Modal */}
+        {showPerformanceModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="w-full max-w-4xl h-[85vh]">
+              <PerformanceAnalyzer activeReqTab={activeReqTab} onClose={() => setShowPerformanceModal(false)} />
+            </div>
           </div>
         )}
       </div>
