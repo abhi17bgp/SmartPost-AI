@@ -101,26 +101,21 @@ exports.register = catchAsync(async (req, res, next) => {
     </html>
   `;
 
-  try {
-    await sendEmail({
-      email: newUser.email,
-      subject: 'Verify your SmartPost AI account',
-      message,
-      html
-    });
+  // 5) Send verification email in the background (NON-BLOCKING)
+  sendEmail({
+    email: newUser.email,
+    subject: 'Verify your SmartPost AI account',
+    message,
+    html
+  }).catch(err => {
+    console.error(`[Auth Registration] Background Email FAILED for ${newUser.email}:`, err.message);
+  });
 
-    res.status(201).json({
-      status: 'success',
-      message: 'Registration successful! Verification email sent.'
-    });
-  } catch (err) {
-    console.error("Nodemailer Verification Error: ", err);
-    newUser.emailVerificationToken = undefined;
-    newUser.emailVerificationExpires = undefined;
-    await newUser.save({ validateBeforeSave: false });
-
-    return next(new AppError('There was an error sending the verification email. Try again later!', 500));
-  }
+  // 6) Send immediate success response
+  res.status(201).json({
+    status: 'success',
+    message: 'Registration successful! Please check your email to verify your account.'
+  });
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -237,26 +232,21 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     </html>
   `;
 
-  try {
-    await sendEmail({
-      email: user.email,
-      subject: 'Your password reset token (valid for 10 min)',
-      message,
-      html
-    });
+  // 3) Send it in background (NON-BLOCKING)
+  sendEmail({
+    email: user.email,
+    subject: 'Your password reset token (valid for 10 min)',
+    message,
+    html
+  }).catch(err => {
+    console.error(`[Auth ForgotPassword] Background Email FAILED for ${user.email}:`, err.message);
+  });
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Token sent to email!'
-    });
-  } catch (err) {
-    console.error("Nodemailer Error: ", err);
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    await user.save({ validateBeforeSave: false });
-
-    return next(new AppError('There was an error sending the email. Try again later!', 500));
-  }
+  // 4) Send immediate success response
+  res.status(200).json({
+    status: 'success',
+    message: 'Token sent to email!'
+  });
 });
 
 exports.resetPassword = catchAsync(async (req, res, next) => {

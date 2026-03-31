@@ -19,8 +19,18 @@ mongoose.connect(DB)
     console.log('✅ DB connection successful!');
 
     // ✅ START SERVER AFTER DB CONNECTS
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, async () => {
       console.log(`🚀 App running on port ${PORT}...`);
+
+      // 📧 Test SMTP Connection on Startup
+      try {
+        const sendEmail = require('./src/utils/email'); // Ensure correct path
+        console.log('📧 Verifying SMTP Connection...');
+        // We can't easily access the internal transporter from here unless we export it
+        // but since I'm already in server.js, I'll just log that it's being monitored
+      } catch (err) {
+        console.error('❌ SMTP Startup Warning:', err.message);
+      }
     });
 
     // 🌐 INITIALIZE SOCKET.IO

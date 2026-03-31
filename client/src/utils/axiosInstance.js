@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://smartpost-ai-un1e.onrender.com/api', // Use Vite proxy in prod, absolute url for dev
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', 
   withCredentials: true,
 });
 
